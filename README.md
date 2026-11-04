@@ -12,10 +12,14 @@ To address this, I designed a shared hosting environment where multiple applicat
 
 The infrastructure provides a centralised hosting environment where applications can be deployed and accessed independently through their respective subdomains.
 
+
+## Architecture Diagram
+
+```mermaid
+flowchart TD
+    U["Users / Web Browser"]
     DNS["DNS Records<br/>rabbit.apps.devs.surf<br/>sneakers.apps.devs.surf<br/>crm.apps.devs.surf"]
-
     ALB["AWS Application Load Balancer<br/>HTTPS / SSL Certificate (ACM)"]
-
     EC2["Amazon EC2 Instance<br/>Ubuntu + Nginx Reverse Proxy"]
 
     U --> DNS
@@ -41,6 +45,8 @@ The infrastructure provides a centralised hosting environment where applications
     end
 
     ECR["Amazon ECR<br/>Container Image Registry"] -.->|"Pulls Images"| EC2
+```
+
 
 ## The Problem I Wanted to Solve
 
