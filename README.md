@@ -98,6 +98,7 @@ Resources include:
 
 - VPC and subnets
 - Internet Gateway and route tables
+- Identity and Access Management (IAM) 
 - EC2 instance
 - Security groups
 - Application Load Balancer
@@ -123,6 +124,8 @@ The services include:
 - Django CRM: Application and PostgreSQL database.
 
 Each application has its own services and database. Database ports are kept within Docker networking and are not exposed publicly.
+
+<img width="1366" height="768" alt="Screenshot (97)" src="https://github.com/user-attachments/assets/b617c937-40ae-4581-8525-62b6d2d03061" />
 
 **5. Amazon ECR**
 
