@@ -30,15 +30,14 @@ flowchart TD
     ALB --> EC2
 
     EC2 -->|"rabbit.apps.devs.surf"| RF["Rabbit LMS Frontend"]
-    EC2 -->|"API Requests"| RB["Rabbit LMS Backend"]
+    RF -->|"API Requests"| RB["Rabbit LMS Backend"]
+    RB -->|"Database Connection"| RM[("Rabbit LMS MongoDB")]
+
     EC2 -->|"sneakers.apps.devs.surf"| SN["Sneakers Application"]
-    EC2 -->|"crm.apps.devs.surf"| CRM["Django CRM"]
-
-    RB --> RM[("Rabbit LMS MongoDB")]
-
-    CRM --- PG[("PostgreSQL")]
-
     SN -->|"Database Connection"| ATLAS[("MongoDB Atlas<br/>Sneakers Database")]
+
+    EC2 -->|"crm.apps.devs.surf"| CRM["Django CRM"]
+    CRM -->|"Database Connection"| PG[("PostgreSQL")]
 
     subgraph HOST["Docker Containers on EC2"]
         RF
