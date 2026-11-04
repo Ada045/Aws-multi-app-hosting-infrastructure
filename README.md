@@ -16,39 +16,26 @@ The infrastructure provides a centralised hosting environment where applications
 ## Architecture Diagram
 
 ```mermaid
-flowchart TD
-    U["Users / Web Browser"]
+flowchart LR
+    U["Users"] --> DNS["DNS"]
+    DNS --> ALB["AWS ALB<br/>HTTPS / ACM"]
+    ALB --> EC2["EC2 + Nginx"]
 
-    DNS["DNS Records<br/>rabbit.apps.devs.surf<br/>sneakers.apps.devs.surf<br/>crm.apps.devs.surf"]
+    subgraph APPS["Docker Applications on EC2"]
+        RF["Rabbit Frontend"] --> RB["Rabbit Backend"]
+        RB --> RM[("MongoDB")]
 
-    ALB["AWS Application Load Balancer<br/>HTTPS / SSL Certificate (ACM)"]
-
-    EC2["Amazon EC2 Instance<br/>Ubuntu + Nginx Reverse Proxy"]
-
-    U --> DNS
-    DNS --> ALB
-    ALB --> EC2
-
-    EC2 -->|"rabbit.apps.devs.surf"| RF["Rabbit LMS Frontend"]
-    RF -->|"API Requests"| RB["Rabbit LMS Backend"]
-    RB -->|"Database Connection"| RM[("Rabbit LMS MongoDB")]
-
-    EC2 -->|"sneakers.apps.devs.surf"| SN["Sneakers Application"]
-    SN -->|"Database Connection"| ATLAS[("MongoDB Atlas<br/>Sneakers Database")]
-
-    EC2 -->|"crm.apps.devs.surf"| CRM["Django CRM"]
-    CRM -->|"Database Connection"| PG[("PostgreSQL")]
-
-    subgraph HOST["Docker Containers on EC2"]
-        RF
-        RB
-        RM
-        SN
-        CRM
-        PG
+        SN["Sneakers App"]
+        CRM["Django CRM"] --> PG[("PostgreSQL")]
     end
 
-    ECR["Amazon ECR<br/>Container Image Registry"] -.->|"Pulls Images"| EC2
+    EC2 --> RF
+    EC2 --> SN
+    EC2 --> CRM
+
+    SN --> ATLAS[("MongoDB Atlas")]
+
+    ECR["Amazon ECR"] -.-> EC2
 ```
 
 
