@@ -64,6 +64,8 @@ The infrastructure currently hosts three applications:
 
 Each application runs in its own containers with its supporting services.
 
+<img width="1366" height="768" alt="Screenshot (96)" src="https://github.com/user-attachments/assets/bde6e282-3d42-4e8f-b7b8-8ea4c6b12e2e" />
+
 ## Architecture
 
 The project uses a shared EC2 hosting architecture.
