@@ -18,8 +18,11 @@ The infrastructure provides a centralised hosting environment where applications
 ```mermaid
 flowchart TD
     U["Users / Web Browser"]
+
     DNS["DNS Records<br/>rabbit.apps.devs.surf<br/>sneakers.apps.devs.surf<br/>crm.apps.devs.surf"]
+
     ALB["AWS Application Load Balancer<br/>HTTPS / SSL Certificate (ACM)"]
+
     EC2["Amazon EC2 Instance<br/>Ubuntu + Nginx Reverse Proxy"]
 
     U --> DNS
@@ -31,9 +34,11 @@ flowchart TD
     EC2 -->|"sneakers.apps.devs.surf"| SN["Sneakers Application"]
     EC2 -->|"crm.apps.devs.surf"| CRM["Django CRM"]
 
-    RF --- RM[("MongoDB")]
+    RF --- RM[("Rabbit LMS MongoDB")]
     RB --- RM
     CRM --- PG[("PostgreSQL")]
+
+    SN -->|"Database Connection"| ATLAS[("MongoDB Atlas<br/>Sneakers Database")]
 
     subgraph HOST["Docker Containers on EC2"]
         RF
