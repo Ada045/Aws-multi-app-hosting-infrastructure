@@ -34,8 +34,8 @@ flowchart TD
     EC2 -->|"sneakers.apps.devs.surf"| SN["Sneakers Application"]
     EC2 -->|"crm.apps.devs.surf"| CRM["Django CRM"]
 
-    RF --- RM[("Rabbit LMS MongoDB")]
-    RB --- RM
+    RB --> RM[("Rabbit LMS MongoDB")]
+
     CRM --- PG[("PostgreSQL")]
 
     SN -->|"Database Connection"| ATLAS[("MongoDB Atlas<br/>Sneakers Database")]
