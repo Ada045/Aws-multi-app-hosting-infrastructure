@@ -12,6 +12,40 @@ To address this, I designed a shared hosting environment where multiple applicat
 
 The infrastructure provides a centralised hosting environment where applications can be deployed and accessed independently through their respective subdomains.
 
+
+flowchart TD
+    U["Users / Web Browser"]
+
+    DNS["DNS Records<br/>rabbit.apps.devs.surf<br/>sneakers.apps.devs.surf<br/>crm.apps.devs.surf"]
+
+    ALB["AWS Application Load Balancer<br/>HTTPS / SSL Certificate (ACM)"]
+
+    EC2["Amazon EC2 Instance<br/>Ubuntu + Nginx Reverse Proxy"]
+
+    U --> DNS
+    DNS --> ALB
+    ALB --> EC2
+
+    EC2 -->|"rabbit.apps.devs.surf"| RF["Rabbit LMS Frontend"]
+    EC2 -->|"API Requests"| RB["Rabbit LMS Backend"]
+    EC2 -->|"sneakers.apps.devs.surf"| SN["Sneakers Application"]
+    EC2 -->|"crm.apps.devs.surf"| CRM["Django CRM"]
+
+    RF --- RM[("MongoDB")]
+    RB --- RM
+    CRM --- PG[("PostgreSQL")]
+
+    subgraph HOST["Docker Containers on EC2"]
+        RF
+        RB
+        RM
+        SN
+        CRM
+        PG
+    end
+
+    ECR["Amazon ECR<br/>Container Image Registry"] -.->|"Pulls Images"| EC2
+
 ## The Problem I Wanted to Solve
 
 Hosting multiple applications on separate EC2 instances can increase costs, especially when the applications are mainly used for testing, demonstrations and low-traffic purposes.
