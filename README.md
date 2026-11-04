@@ -174,7 +174,7 @@ This allows each application to be accessed using its own URL while sharing the 
 
 Implemented the following security measures:
 
-- Restricted SSH access to an authorised IP address.
+- Restricted SSH access to unauthorised IP address.
 - Allowed EC2 application traffic only from the ALB security group.
 - Used security groups to control network access.
 - Enabled HTTPS through the Application Load Balancer.
