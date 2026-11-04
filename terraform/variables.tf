@@ -1,0 +1,12 @@
+variable "aws_region" {}
+variable "vpc_cidr" {}
+variable "project_name" {}
+variable "avail_zone_1" {}
+variable "avail_zone_2" {}
+variable "public_cidr_1" {}
+variable "public_cidr_2" {}
+variable "my_ip" {}
+variable "instance_type" {}
+variable "key_name" {}
+variable "public_key_location" {}
+variable "acm_certificate_arn" {}
