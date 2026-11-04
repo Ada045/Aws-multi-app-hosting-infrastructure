@@ -1,260 +1,191 @@
-# Cost-Efficient Multi-Application Hosting Infrastructure on AWS
+# AWS Multi-Application Hosting with Terraform and Docker
 
 ## Project Overview
 
-This project demonstrates the design and deployment of a cost-efficient, multi-application hosting infrastructure on AWS using Terraform, Docker, Docker Compose and Nginx.
+This project focuses on hosting multiple applications on a single AWS EC2 instance to reduce infrastructure costs.
 
-The primary objective was to solve a common infrastructure challenge: **how to host and manage multiple independent applications without provisioning a separate cloud server for each application.**
+Instead of creating a separate EC2 instance for every application, I built a shared hosting environment where multiple applications run in separate Docker containers and are accessed through their own subdomains.
 
-For applications primarily used for demonstrations, development, testing and other low-traffic purposes, deploying each application on a dedicated EC2 instance can result in unnecessary infrastructure costs and underutilised computing resources.
+The infrastructure was provisioned with Terraform, while Docker Compose manages the applications and their services. Nginx handles traffic routing, and an AWS Application Load Balancer provides HTTPS access.
 
-To address this, I designed a shared hosting environment where multiple applications run on a single EC2 instance while maintaining separate containers, application configurations, databases and access URLs.
+## The Problem I Wanted to Solve
 
-The infrastructure provides a centralised hosting environment where applications can be deployed and accessed independently through their respective subdomains.
+Hosting multiple applications on separate EC2 instances can increase costs, especially when the applications are mainly used for testing, demonstrations and low-traffic purposes.
 
-## Problem Statement
+I wanted to find a way to:
 
-When managing multiple applications, one traditional approach is to provision a separate EC2 instance for every application.
-
-Although this provides dedicated computing resources, it can introduce additional costs, especially when the applications do not require significant computing capacity or experience low traffic.
-
-For example, hosting three applications independently could require:
-
-- Three EC2 instances.
-- Separate infrastructure configurations.
-- Additional resource management.
-- Higher recurring compute costs.
-
-I wanted to explore an alternative architecture that would reduce infrastructure costs while maintaining a structured deployment environment.
-
-The solution was to use a single EC2 instance as a shared application host, with Docker providing application isolation and Nginx handling traffic routing.
-
-## Project Objectives
-
-The main objectives were to:
-
-1. Reduce infrastructure costs by hosting multiple applications on a single EC2 instance.
-2. Automate AWS infrastructure provisioning using Terraform.
-3. Containerise applications and their supporting services using Docker.
-4. Maintain application separation through individual containers and Docker Compose configurations.
-5. Configure Nginx as a reverse proxy to route requests based on domain names.
-6. Provide HTTPS access using AWS Application Load Balancer and SSL/TLS certificates.
-7. Use Amazon ECR as the central container image registry.
-8. Create an infrastructure that can accommodate additional applications without requiring a completely new hosting environment for each one.
+- Host multiple applications on one EC2 instance.
+- Reduce the cost of running separate servers.
+- Keep each application's services and database separate.
+- Access each application through its own domain.
+- Manage the infrastructure using Terraform.
+- Make it easier to add more applications to the same hosting environment.
 
 ## Applications Hosted
 
-The infrastructure currently supports three applications:
+The infrastructure currently hosts three applications:
 
-| Application | Description | Access URL |
+| Application | Description | Subdomain |
 |---|---|---|
-| Rabbit LMS | Learning Management System | rabbit.apps.devs.surf |
-| Sneakers | E-commerce application | sneakers.apps.devs.surf |
-| Django CRM | Customer Relationship Management application | crm.apps.devs.surf |
+| Rabbit LMS | Learning Management System | `rabbit.apps.devs.surf` |
+| Sneakers | E-commerce application | `sneakers.apps.devs.surf` |
+| Django CRM | Customer Relationship Management | `crm.apps.devs.surf` |
 
-Each application runs in its own containers and uses its own supporting database service.
+Each application runs in its own containers with its supporting services.
 
-This allows the applications to operate independently while sharing the underlying EC2 infrastructure.
+## Architecture
 
-## Architecture Overview
+The project uses a shared EC2 hosting architecture.
 
-The infrastructure follows a shared-host architecture.
+**How it works:**
 
-Incoming requests are received by an AWS Application Load Balancer, which handles HTTPS termination and forwards traffic to the EC2 instance.
-
-Nginx on the EC2 instance then examines the requested hostname and routes the request to the appropriate application container.
+1. A user visits an application's subdomain.
+2. DNS directs the request to the AWS Application Load Balancer.
+3. The ALB handles HTTPS using an SSL/TLS certificate from AWS Certificate Manager.
+4. The ALB forwards the request to the EC2 instance.
+5. Nginx checks the requested subdomain and routes traffic to the correct application.
+6. The application processes the request and communicates with its database where required.
+7. The response is returned to the user through Nginx and the ALB.
 
 ### Architecture Components
 
-**1. Terraform – Infrastructure as Code**
+**1. AWS VPC and Networking**
 
-Terraform was used to provision and manage the AWS infrastructure.
+Created a custom VPC with public and private subnets, an Internet Gateway and route tables to provide network connectivity.
 
-Instead of manually creating resources through the AWS Management Console, I organised the infrastructure into reusable modules.
+Configured security groups to control access to the infrastructure.
 
-The infrastructure includes:
+**2. Terraform**
 
-- VPC and networking resources.
-- Public and private subnets.
-- Internet Gateway and routing configuration.
-- EC2 instance.
-- Security groups.
-- Application Load Balancer.
-- Target group and listeners.
-- SSL/TLS certificate integration.
+Used Terraform to provision the AWS infrastructure.
 
-The modular structure makes the infrastructure easier to maintain and extend.
+Organised the configuration into reusable modules to make resource management easier and keep the project organised.
 
-**2. Amazon EC2 – Shared Application Host**
+Resources include:
 
-A single EC2 instance serves as the central hosting environment for all three applications.
+- VPC and subnets
+- Internet Gateway and route tables
+- EC2 instance
+- Security groups
+- Application Load Balancer
+- Target group and listeners
+- SSL/TLS certificate integration
 
-Rather than assigning a separate server to each application, the instance runs multiple Docker containers.
+**3. Amazon EC2**
 
-This approach reduces the number of compute resources required for applications that do not need dedicated servers.
+Deployed one EC2 instance to host all three applications.
 
-**3. Docker and Docker Compose – Application Containerisation**
+The instance acts as the central hosting server for the Docker containers.
 
-Docker is used to package and run the applications in isolated containers.
+**4. Docker and Docker Compose**
 
-Docker Compose manages the containers and their supporting services.
+Used Docker to containerise the applications and their supporting services.
 
-Each application has its own application services and database dependencies.
+Docker Compose manages the containers and their communication.
 
-For example:
+The services include:
 
-- Rabbit LMS runs its frontend, backend and MongoDB services.
-- Sneakers runs its application container.
-- Django CRM runs its application and PostgreSQL database services.
+- Rabbit LMS: Frontend, backend and MongoDB.
+- Sneakers: Application container.
+- Django CRM: Application and PostgreSQL database.
 
-Database services communicate with their respective applications through Docker networking. Database ports are not exposed publicly.
+Each application has its own services and database. Database ports are kept within Docker networking and are not exposed publicly.
 
-This provides logical separation between application environments while allowing them to share the same EC2 host.
+**5. Amazon ECR**
 
-**4. Amazon ECR – Container Image Registry**
+Used Amazon Elastic Container Registry to store the application Docker images.
 
-Amazon Elastic Container Registry (ECR) is used to store the Docker images required by the hosting environment.
+The images are pushed to ECR and pulled by the EC2 instance during deployment.
 
-Application images are built and pushed to ECR, allowing the EC2 instance to authenticate and pull the required images during deployment.
+An EC2 IAM role provides the permissions required to access the images.
 
-This separates image storage from the application hosting environment.
+**6. Nginx Reverse Proxy**
 
-**5. Nginx – Reverse Proxy and Routing**
+Configured Nginx on the EC2 instance to route incoming requests based on the requested subdomain.
 
-Nginx is responsible for directing incoming requests to the correct application.
+| Subdomain | Destination |
+|---|---|
+| `rabbit.apps.devs.surf` | Rabbit frontend |
+| `sneakers.apps.devs.surf` | Sneakers application |
+| `crm.apps.devs.surf` | Django CRM |
 
-Instead of exposing individual application ports publicly, the applications are accessed through dedicated subdomains.
+Rabbit LMS also has a separate API route that forwards requests to its backend container.
 
-The Nginx configuration uses hostname-based routing:
+This allows all three applications to share the same server and public entry point.
 
-- `rabbit.apps.devs.surf` routes to the Rabbit frontend.
-- `sneakers.apps.devs.surf` routes to the Sneakers application.
-- `crm.apps.devs.surf` routes to the Django CRM application.
+**7. AWS Application Load Balancer**
 
-Rabbit LMS also has a separate backend API endpoint, which Nginx routes to the Rabbit backend container.
+Configured an internet-facing Application Load Balancer to handle incoming traffic.
 
-This allows multiple applications to share the same EC2 instance and public entry point without conflicting with one another.
+- HTTP listener on port 80 redirects traffic to HTTPS.
+- HTTPS listener on port 443 handles secure requests.
+- A target group forwards traffic to the EC2 instance on port 80.
+- Health checks monitor the EC2 target.
 
-**6. AWS Application Load Balancer – Traffic Entry Point**
+**8. AWS Certificate Manager**
 
-An internet-facing Application Load Balancer provides a central entry point for incoming application traffic.
+Used AWS Certificate Manager to manage the SSL/TLS certificate for the application subdomains.
 
-It is configured with:
+This allows users to access the applications securely over HTTPS without managing separate certificates inside each container.
 
-- An HTTP listener on port 80 that redirects requests to HTTPS.
-- An HTTPS listener on port 443.
-- An SSL/TLS certificate managed through AWS Certificate Manager (ACM).
-- A target group that forwards HTTP traffic to the EC2 instance.
+**9. DNS Configuration**
 
-The ALB terminates HTTPS connections and forwards requests to the EC2 instance, where Nginx handles application-level routing.
+Configured the application subdomains to point to the Application Load Balancer.
 
-**7. AWS Certificate Manager – SSL/TLS**
+This allows each application to be accessed using its own URL while sharing the same infrastructure.
 
-AWS Certificate Manager is used to manage the SSL/TLS certificate for the application subdomains.
+## Security Configuration
 
-This enables secure HTTPS access without having to manage individual certificates inside each application container.
+Implemented the following security measures:
 
-## How Traffic Flows Through the Infrastructure
-
-Understanding the request flow is an important part of this project.
-
-When a user visits one of the application URLs, the following process takes place:
-
-1. The user accesses an application through its subdomain.
-2. DNS resolves the subdomain to the Application Load Balancer.
-3. The ALB receives the incoming request.
-4. If the request uses HTTP, it redirects the user to HTTPS.
-5. The ALB terminates the HTTPS connection using its ACM certificate.
-6. The ALB forwards the request to the EC2 instance over HTTP.
-7. Nginx on the EC2 instance examines the hostname in the request.
-8. Based on the hostname, Nginx forwards the request to the appropriate application container.
-9. The application processes the request and communicates with its database where necessary.
-10. The response travels back through Nginx and the ALB to the user.
-
-### Example: Accessing Rabbit LMS
-
-When a user visits:
-
-`https://rabbit.apps.devs.surf`
-
-The request follows this path:
-
-`User → DNS → Application Load Balancer → EC2 Nginx → Rabbit Frontend Container`
-
-When the frontend makes an API request, Nginx routes the API traffic to the Rabbit backend container.
-
-This routing arrangement allows the frontend and backend to operate as separate services while presenting a unified application URL to users.
-
-## Security Considerations
-
-Security was considered throughout the infrastructure design.
-
-Some of the measures implemented include:
-
-- Security groups to control inbound and outbound network traffic.
-- SSH access restricted to an authorised source IP.
-- EC2 application traffic on port 80 restricted to the ALB security group.
-- Public access to the applications provided through the ALB over HTTP and HTTPS.
-- HTTPS termination using AWS Certificate Manager.
-- Database containers kept within Docker networking rather than exposing their ports publicly.
-- EC2 IAM role permissions for retrieving container images from Amazon ECR.
-
-These measures help reduce unnecessary public exposure of the infrastructure and its supporting services.
-
-## Infrastructure Design Decisions
-
-One of the most important decisions in this project was choosing a shared hosting architecture instead of provisioning separate EC2 instances.
-
-This decision was based on the expected workload of the applications.
-
-Since the applications are primarily intended for demonstrations and low-traffic usage, dedicating a separate server to each application would introduce additional infrastructure costs without necessarily providing meaningful benefits.
-
-By using Docker, Docker Compose and Nginx, I was able to host multiple applications within one environment while keeping their application services and databases logically separated.
-
-The architecture is designed for cost efficiency rather than high availability.
-
-It is important to note that hosting all applications on one EC2 instance introduces a single point of failure. If the instance becomes unavailable, all hosted applications may become unavailable as well. Resource contention is also a consideration as application traffic increases.
-
-For this reason, the design is most suitable for low-traffic applications and demonstration environments rather than workloads requiring high availability or independent scaling.
-
-## Key Challenges and Learning Outcomes
-
-Working on this project provided practical experience with several areas of cloud and DevOps engineering:
-
-- Designing AWS networking and infrastructure using Terraform.
-- Organising Terraform configurations into reusable modules.
-- Managing multiple Docker containers on a shared host.
-- Configuring Nginx reverse proxy routing for multiple applications.
-- Understanding how DNS, HTTPS, load balancers and reverse proxies work together.
-- Managing container images through Amazon ECR.
-- Configuring communication between application containers and database services.
-- Implementing network restrictions through AWS security groups.
-- Troubleshooting application deployment and infrastructure issues.
-
-One of my biggest takeaways was understanding that infrastructure design involves more than getting an application running. It also requires considering cost, security, maintainability, resource utilisation and the expected workload.
+- Restricted SSH access to an authorised IP address.
+- Allowed EC2 application traffic only from the ALB security group.
+- Used security groups to control network access.
+- Enabled HTTPS through the Application Load Balancer.
+- Kept database ports private within Docker networking.
+- Used an EC2 IAM role to retrieve images from Amazon ECR.
 
 ## Technologies Used
 
-| Category | Technologies |
+| Category | Tools |
 |---|---|
 | Cloud Platform | AWS |
 | Infrastructure as Code | Terraform |
 | Compute | Amazon EC2 |
 | Containerisation | Docker |
-| Container Orchestration | Docker Compose |
+| Container Management | Docker Compose |
 | Reverse Proxy | Nginx |
-| Load Balancing | AWS Application Load Balancer |
+| Load Balancer | AWS Application Load Balancer |
 | Container Registry | Amazon ECR |
 | SSL/TLS | AWS Certificate Manager |
-| Networking | VPC, Subnets, Internet Gateway, Security Groups |
+| Networking | VPC, Subnets, Internet Gateway, Route Tables, Security Groups |
 | Databases | MongoDB, PostgreSQL |
+
+## Key Learnings
+
+Through this project, I gained practical experience in:
+
+- Building AWS infrastructure with Terraform modules.
+- Hosting multiple applications on one EC2 instance.
+- Managing multiple containers and databases with Docker Compose.
+- Configuring Nginx for subdomain-based routing.
+- Connecting DNS, HTTPS, load balancers and reverse proxies.
+- Managing Docker images with Amazon ECR.
+- Configuring IAM permissions and AWS security groups.
+- Troubleshooting application and infrastructure issues.
+
+## Design Considerations
+
+This architecture is designed for cost efficiency and low-traffic applications.
+
+Hosting multiple applications on one EC2 instance reduces the number of servers required, but it also means they share the same computing resources.
+
+The EC2 instance is a single point of failure, so this design is not intended for applications that require high availability or independent scaling.
 
 ## Conclusion
 
-This project demonstrates how multiple independent applications can be hosted on shared cloud infrastructure without requiring a dedicated EC2 instance for every application.
+The goal of this project was to build a shared hosting environment that reduces infrastructure costs while keeping multiple applications organised and accessible.
 
-By combining Terraform, Docker, Docker Compose, Nginx and AWS services, I built a centralised hosting environment that focuses on reducing infrastructure costs while maintaining application separation and organised traffic routing.
+By combining Terraform, AWS, Docker Compose and Nginx, I was able to provision the infrastructure, deploy three applications and route traffic to each one through its own subdomain.
 
-The project also strengthened my understanding of how different DevOps and cloud technologies work together to deliver a functional hosting solution.
-
-**The key idea behind this project is simple: optimise infrastructure resources without unnecessarily increasing complexity.**
+**The main idea: Host more applications with fewer servers and make better use of available cloud resources.**
