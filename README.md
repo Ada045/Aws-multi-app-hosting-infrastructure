@@ -12,10 +12,6 @@ To address this, I designed a shared hosting environment where multiple applicat
 
 The infrastructure provides a centralised hosting environment where applications can be deployed and accessed independently through their respective subdomains.
 
-
-flowchart TD
-    U["Users / Web Browser"]
-
     DNS["DNS Records<br/>rabbit.apps.devs.surf<br/>sneakers.apps.devs.surf<br/>crm.apps.devs.surf"]
 
     ALB["AWS Application Load Balancer<br/>HTTPS / SSL Certificate (ACM)"]
