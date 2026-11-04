@@ -2,11 +2,15 @@
 
 ## Project Overview
 
-This project focuses on hosting multiple applications on a single AWS EC2 instance to reduce infrastructure costs.
+This project demonstrates the design and deployment of a cost-efficient, multi-application hosting infrastructure on AWS using Terraform, Docker, Docker Compose and Nginx.
 
-Instead of creating a separate EC2 instance for every application, I built a shared hosting environment where multiple applications run in separate Docker containers and are accessed through their own subdomains.
+The primary objective was to solve a common infrastructure challenge: how to host and manage multiple independent applications without provisioning a separate cloud server for each application.
 
-The infrastructure was provisioned with Terraform, while Docker Compose manages the applications and their services. Nginx handles traffic routing, and an AWS Application Load Balancer provides HTTPS access.
+For applications primarily used for demonstrations, development, testing and other low-traffic purposes, deploying each application on a dedicated EC2 instance can result in unnecessary infrastructure costs and underutilised computing resources.
+
+To address this, I designed a shared hosting environment where multiple applications run on a single EC2 instance while maintaining separate containers, application configurations, databases and access URLs.
+
+The infrastructure provides a centralised hosting environment where applications can be deployed and accessed independently through their respective subdomains.
 
 ## The Problem I Wanted to Solve
 
